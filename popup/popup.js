@@ -41,7 +41,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function checkIfGoogleDocs() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    isGoogleDocs = tab.url && tab.url.includes('docs.google.com');
+    // Use URL parsing to properly validate the hostname
+    let url;
+    try {
+      url = new URL(tab.url);
+    } catch {
+      isGoogleDocs = false;
+    }
+    isGoogleDocs = url && url.hostname === 'docs.google.com';
     
     if (!isGoogleDocs) {
       notGoogleDocsMessage.classList.remove('hidden');

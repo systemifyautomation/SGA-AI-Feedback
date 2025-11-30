@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SGA AI Feedback</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" stroke="#4F46E5" stroke-width="2" fill="#EEF2FF"/>
+          <path d="M10 16L14 20L22 12" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="title">SGA AI Feedback</h1>
+    </header>
+
+    <div id="not-google-docs" class="status-message warning hidden">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 6V10M10 14H10.01M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Please open a Google Doc to use this extension</span>
+    </div>
+
+    <div id="main-content">
+      <div id="selected-text-container" class="selection-container hidden">
+        <label class="label">Selected Text:</label>
+        <div id="selected-text" class="selected-text-box"></div>
+      </div>
+
+      <div class="feedback-section">
+        <h2 class="section-title">Choose Feedback Type</h2>
+        
+        <div class="feedback-type-buttons">
+          <button id="btn-relative" class="feedback-type-btn" data-type="relative">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 12H16M12 8V16M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Relative</span>
+            <small>Compare with expected</small>
+          </button>
+          
+          <button id="btn-absolute" class="feedback-type-btn" data-type="absolute">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Absolute</span>
+            <small>Rate standalone quality</small>
+          </button>
+        </div>
+      </div>
+
+      <div id="feedback-form" class="feedback-form hidden">
+        <div id="relative-fields" class="form-fields hidden">
+          <div class="form-group">
+            <label class="label" for="expected-output">Expected Output</label>
+            <textarea id="expected-output" class="textarea" placeholder="What did you expect the AI to produce?"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="label" for="relative-comment">Your Comment</label>
+            <textarea id="relative-comment" class="textarea" placeholder="Explain how the actual differs from expected..."></textarea>
+          </div>
+        </div>
+
+        <div id="absolute-fields" class="form-fields hidden">
+          <div class="form-group">
+            <label class="label">Quality Rating</label>
+            <div class="rating-container">
+              <button class="rating-btn" data-rating="1">1</button>
+              <button class="rating-btn" data-rating="2">2</button>
+              <button class="rating-btn" data-rating="3">3</button>
+              <button class="rating-btn" data-rating="4">4</button>
+              <button class="rating-btn" data-rating="5">5</button>
+            </div>
+            <div class="rating-labels">
+              <span>Poor</span>
+              <span>Excellent</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label" for="absolute-comment">Your Comment</label>
+            <textarea id="absolute-comment" class="textarea" placeholder="Explain your rating..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button id="btn-cancel" class="btn btn-secondary">Cancel</button>
+          <button id="btn-submit" class="btn btn-primary">
+            <span>Submit Feedback</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2L7 9M14 2L9.5 14L7 9M14 2L2 6.5L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="success-message" class="status-message success hidden">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 10L9 13L14 7M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Feedback submitted successfully!</span>
+      </div>
+
+      <div id="error-message" class="status-message error hidden">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 6V10M10 14H10.01M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="error-text">An error occurred. Please try again.</span>
+      </div>
+
+      <div class="instructions">
+        <h3>How to use:</h3>
+        <ol>
+          <li>Open a Google Doc</li>
+          <li>Select the AI-generated text you want to give feedback on</li>
+          <li>Choose feedback type (Relative or Absolute)</li>
+          <li>Add your comments and submit</li>
+        </ol>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span>SGA Consulting © 2024</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

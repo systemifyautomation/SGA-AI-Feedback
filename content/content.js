@@ -19,7 +19,7 @@ function getSelectedText() {
   }
   
   // For Google Docs, the selection might be in an iframe
-  // or rendered differently, so we try multiple approaches
+  // or rendered differently, so we try the iframe approach
   try {
     // Check for Google Docs specific elements
     const docsIframe = document.querySelector('.docs-texteventtarget-iframe');
@@ -27,25 +27,6 @@ function getSelectedText() {
       const iframeSelection = docsIframe.contentDocument.getSelection();
       if (iframeSelection && iframeSelection.toString().trim()) {
         return iframeSelection.toString().trim();
-      }
-    }
-    
-    // Try getting text from the kix selection
-    const kixSelection = document.querySelector('.kix-selection-overlay');
-    if (kixSelection) {
-      // Look for selected content in the document
-      const selectedElements = document.querySelectorAll('.kix-lineview-content');
-      let selectedText = '';
-      
-      selectedElements.forEach(el => {
-        const text = el.textContent;
-        if (text) {
-          selectedText += text + ' ';
-        }
-      });
-      
-      if (selectedText.trim()) {
-        return selectedText.trim();
       }
     }
   } catch (error) {

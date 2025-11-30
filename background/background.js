@@ -1,7 +1,7 @@
 // SGA AI Feedback - Background Service Worker
 
-// n8n Webhook URL - Update this with your actual webhook URL
-const WEBHOOK_URL = 'https://your-n8n-instance.com/webhook/sga-ai-feedback';
+// Default webhook URL - can be configured in extension storage
+const DEFAULT_WEBHOOK_URL = 'https://your-n8n-instance.com/webhook/sga-ai-feedback';
 
 // Listen for messages from popup and content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -13,17 +13,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   if (request.action === 'openPopup') {
-    // Chrome doesn't allow programmatically opening the popup
-    // Instead, we can show a notification or use a different approach
-    chrome.action.openPopup().catch(() => {
-      // Fallback: Show notification
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icons/icon48.png',
-        title: 'SGA AI Feedback',
-        message: 'Click the extension icon to give feedback'
-      });
-    });
+    // Chrome doesn't support programmatically opening popups
+    // User needs to click the extension icon
+    console.log('User should click the extension icon to open feedback');
     sendResponse({ success: true });
     return true;
   }
@@ -44,7 +36,7 @@ async function handleSubmitFeedback(data) {
   try {
     // Get the webhook URL from storage or use default
     const storage = await chrome.storage.sync.get(['webhookUrl']);
-    const webhookUrl = storage.webhookUrl || WEBHOOK_URL;
+    const webhookUrl = storage.webhookUrl || DEFAULT_WEBHOOK_URL;
     
     // Prepare the payload
     const payload = {
@@ -135,23 +127,11 @@ chrome.runtime.onInstalled.addListener((details) => {
     
     // Set default settings
     chrome.storage.sync.set({
-      webhookUrl: WEBHOOK_URL,
+      webhookUrl: DEFAULT_WEBHOOK_URL,
       showFloatingButton: true
     });
   } else if (details.reason === 'update') {
     console.log('SGA AI Feedback extension updated to version', chrome.runtime.getManifest().version);
-  }
-});
-
-// Handle keyboard shortcuts
-chrome.commands.onCommand.addListener((command) => {
-  if (command === 'give-feedback') {
-    // Get the active tab and inject the feedback prompt
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0] && tabs[0].url.includes('docs.google.com')) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'showQuickFeedback' });
-      }
-    });
   }
 });
 

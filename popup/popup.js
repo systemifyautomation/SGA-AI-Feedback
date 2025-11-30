@@ -30,9 +30,6 @@ let currentRating = null;
 let selectedText = '';
 let isGoogleDocs = false;
 
-// n8n Webhook URL - Update this with your actual webhook URL
-const WEBHOOK_URL = 'https://your-n8n-instance.com/webhook/sga-ai-feedback';
-
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
   await checkIfGoogleDocs();
@@ -163,8 +160,8 @@ async function submitFeedback() {
     const expected = expectedOutput.value.trim();
     comment = relativeComment.value.trim();
     
-    if (!comment && !expected) {
-      showError('Please provide your expected output or a comment');
+    if (!expected) {
+      showError('Please provide your expected output');
       return;
     }
     

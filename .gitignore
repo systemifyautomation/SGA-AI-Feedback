@@ -1,3 +1,6 @@
+# Configuration files with sensitive data
+config.js
+
 # Dependencies
 node_modules/
 package.json
@@ -16,3 +19,8 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Extension package
+*.zip
+*.crx
+*.pem

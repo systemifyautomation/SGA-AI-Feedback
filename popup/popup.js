@@ -1,236 +1,410 @@
-// SGA AI Feedback - Popup Script
+document.addEventListener('DOMContentLoaded', function() {
+  // Main menu buttons
+  const approveBtn = document.getElementById('approveBtn');
+  const adjustBtn = document.getElementById('adjustBtn');
+  const rulesBtn = document.getElementById('rulesBtn');
 
-// DOM Elements
-const notGoogleDocsMessage = document.getElementById('not-google-docs');
-const mainContent = document.getElementById('main-content');
-const selectedTextContainer = document.getElementById('selected-text-container');
-const selectedTextElement = document.getElementById('selected-text');
-const feedbackForm = document.getElementById('feedback-form');
-const relativeFields = document.getElementById('relative-fields');
-const absoluteFields = document.getElementById('absolute-fields');
-const successMessage = document.getElementById('success-message');
-const errorMessage = document.getElementById('error-message');
-const errorText = document.getElementById('error-text');
+  // Adjust view elements
+  const adjustContext = document.getElementById('adjustContext');
+  const adjustPrompt = document.getElementById('adjustPrompt');
+  const adjustSubmitRecreateBtn = document.getElementById('adjustSubmitRecreateBtn');
+  const adjustSubmitBtn = document.getElementById('adjustSubmitBtn');
 
-// Buttons
-const btnRelative = document.getElementById('btn-relative');
-const btnAbsolute = document.getElementById('btn-absolute');
-const btnCancel = document.getElementById('btn-cancel');
-const btnSubmit = document.getElementById('btn-submit');
-const ratingButtons = document.querySelectorAll('.rating-btn');
+  // Rules view elements
+  const rulesContainer = document.getElementById('rulesContainer');
+  const addRuleBtn = document.getElementById('addRuleBtn');
+  const rulesSubmitBtn = document.getElementById('rulesSubmitBtn');
 
-// Form inputs
-const expectedOutput = document.getElementById('expected-output');
-const relativeComment = document.getElementById('relative-comment');
-const absoluteComment = document.getElementById('absolute-comment');
+  const status = document.getElementById('status');
 
-// State
-let currentFeedbackType = null;
-let currentRating = null;
-let selectedText = '';
-let isGoogleDocs = false;
+  let ruleCounter = 0;
+  let currentGoogleDocId = null;
 
-// Initialize popup
-document.addEventListener('DOMContentLoaded', async () => {
-  await checkIfGoogleDocs();
-  await getSelectedText();
-  setupEventListeners();
-});
+  // Initialize
+  checkGoogleDocsStatus();
+  loadAdjustData();
+  loadRulesData();
 
-// Check if current tab is Google Docs
-async function checkIfGoogleDocs() {
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    // Use URL parsing to properly validate the hostname
-    let url;
+  // Main menu handlers
+  approveBtn.addEventListener('click', handleApprove);
+  adjustBtn.addEventListener('click', () => showViewWithCheck('adjustView'));
+  rulesBtn.addEventListener('click', () => showView('rulesView'));
+
+  // Adjust view handlers
+  adjustContext.addEventListener('input', saveAdjustData);
+  adjustPrompt.addEventListener('input', saveAdjustData);
+  adjustSubmitRecreateBtn.addEventListener('click', () => handleAdjustSubmit('submit_and_recreate'));
+  adjustSubmitBtn.addEventListener('click', () => handleAdjustSubmit('submit'));
+
+  // Rules view handlers
+  addRuleBtn.addEventListener('click', () => addRuleInput());
+  rulesSubmitBtn.addEventListener('click', handleRulesSubmit);
+
+  // Back and cancel button handlers
+  document.querySelectorAll('.back-btn, .btn-ghost').forEach(btn => {
+    const viewTarget = btn.getAttribute('data-view');
+    if (viewTarget) {
+      btn.addEventListener('click', () => showView(viewTarget));
+    }
+  });
+
+  // Check if on Google Docs
+  async function checkGoogleDocsStatus() {
     try {
-      url = new URL(tab.url);
-    } catch {
-      isGoogleDocs = false;
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const url = new URL(tab.url);
+      const isGoogleDocs = url.hostname === 'docs.google.com';
+      
+      if (isGoogleDocs) {
+        currentGoogleDocId = extractDocId(tab.url);
+        // Enable approve and adjust buttons
+        approveBtn.disabled = false;
+        adjustBtn.disabled = false;
+      } else {
+        // Disable buttons that require Google Docs
+        approveBtn.disabled = true;
+        adjustBtn.disabled = true;
+        approveBtn.style.opacity = '0.5';
+        adjustBtn.style.opacity = '0.5';
+        approveBtn.style.cursor = 'not-allowed';
+        adjustBtn.style.cursor = 'not-allowed';
+        
+        // Add click handlers to show alert when disabled
+        approveBtn.addEventListener('click', showGoogleDocsRequiredAlert);
+        adjustBtn.addEventListener('click', showGoogleDocsRequiredAlert);
+      }
+    } catch (error) {
+      console.error('Error checking Google Docs status:', error);
     }
-    isGoogleDocs = url && url.hostname === 'docs.google.com';
-    
-    if (!isGoogleDocs) {
-      notGoogleDocsMessage.classList.remove('hidden');
-      mainContent.style.opacity = '0.5';
-      mainContent.style.pointerEvents = 'none';
-    }
-  } catch (error) {
-    console.error('Error checking tab:', error);
   }
-}
 
-// Get selected text from the content script
-async function getSelectedText() {
-  if (!isGoogleDocs) return;
-  
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    const response = await chrome.tabs.sendMessage(tab.id, { action: 'getSelectedText' });
-    
-    if (response && response.selectedText) {
-      selectedText = response.selectedText;
-      selectedTextElement.textContent = selectedText;
-      selectedTextContainer.classList.remove('hidden');
-    }
-  } catch (error) {
-    console.error('Error getting selected text:', error);
+  // Show alert when user clicks disabled button
+  function showGoogleDocsRequiredAlert(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    showStatus('⚠ Please open a Google Docs document to use this feature', 'error');
   }
-}
 
-// Setup event listeners
-function setupEventListeners() {
-  // Feedback type buttons
-  btnRelative.addEventListener('click', () => selectFeedbackType('relative'));
-  btnAbsolute.addEventListener('click', () => selectFeedbackType('absolute'));
-  
-  // Rating buttons
-  ratingButtons.forEach(btn => {
-    btn.addEventListener('click', () => selectRating(parseInt(btn.dataset.rating)));
-  });
-  
-  // Form action buttons
-  btnCancel.addEventListener('click', resetForm);
-  btnSubmit.addEventListener('click', submitFeedback);
-}
-
-// Select feedback type
-function selectFeedbackType(type) {
-  currentFeedbackType = type;
-  
-  // Update button states
-  btnRelative.classList.toggle('active', type === 'relative');
-  btnAbsolute.classList.toggle('active', type === 'absolute');
-  
-  // Show form
-  feedbackForm.classList.remove('hidden');
-  
-  // Show appropriate fields
-  relativeFields.classList.toggle('hidden', type !== 'relative');
-  absoluteFields.classList.toggle('hidden', type !== 'absolute');
-  
-  // Hide messages
-  successMessage.classList.add('hidden');
-  errorMessage.classList.add('hidden');
-}
-
-// Select rating
-function selectRating(rating) {
-  currentRating = rating;
-  
-  ratingButtons.forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.rating) <= rating);
-  });
-}
-
-// Reset form
-function resetForm() {
-  currentFeedbackType = null;
-  currentRating = null;
-  
-  // Reset buttons
-  btnRelative.classList.remove('active');
-  btnAbsolute.classList.remove('active');
-  ratingButtons.forEach(btn => btn.classList.remove('active'));
-  
-  // Hide form
-  feedbackForm.classList.add('hidden');
-  
-  // Clear inputs
-  expectedOutput.value = '';
-  relativeComment.value = '';
-  absoluteComment.value = '';
-  
-  // Hide messages
-  successMessage.classList.add('hidden');
-  errorMessage.classList.add('hidden');
-}
-
-// Submit feedback
-async function submitFeedback() {
-  // Validate
-  if (!currentFeedbackType) {
-    showError('Please select a feedback type');
-    return;
-  }
-  
-  let comment = '';
-  let feedbackData = {
-    type: currentFeedbackType,
-    selectedText: selectedText,
-    timestamp: new Date().toISOString(),
-    pageUrl: ''
-  };
-  
-  if (currentFeedbackType === 'relative') {
-    const expected = expectedOutput.value.trim();
-    comment = relativeComment.value.trim();
-    
-    if (!expected) {
-      showError('Please provide your expected output');
+  // Show view with Google Docs check
+  function showViewWithCheck(viewId) {
+    if (!currentGoogleDocId) {
+      showStatus('⚠ Please open a Google Doc to use this feature', 'error');
       return;
     }
-    
-    feedbackData.expectedOutput = expected;
-    feedbackData.comment = comment;
-  } else {
-    comment = absoluteComment.value.trim();
-    
-    if (!currentRating) {
-      showError('Please select a rating');
+    showView(viewId);
+  }
+
+  // Handle Approve Report
+  async function handleApprove() {
+    if (!currentGoogleDocId) {
+      showStatus('⚠ Please open a Google Doc to approve the report', 'error');
       return;
     }
+
+    approveBtn.disabled = true;
+    const originalHTML = approveBtn.innerHTML;
+    approveBtn.innerHTML = `
+      <div class="card-icon approve">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="spin">
+          <path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 19.07L16.24 16.24M19.07 4.93L16.24 7.76M4.93 19.07L7.76 16.24M4.93 4.93L7.76 7.76" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div><h3 class="card-title">Approving...</h3></div>
+    `;
+
+    try {
+      const response = await fetch(CONFIG.WEBHOOKS.approve, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ googleDocId: currentGoogleDocId })
+      });
+
+      if (response.ok) {
+        showStatus('✓ Report approved successfully!', 'success');
+        setTimeout(() => window.close(), 1500);
+      } else {
+        throw new Error('Failed to approve report');
+      }
+    } catch (error) {
+      showStatus('✗ Failed to approve report', 'error');
+      approveBtn.disabled = false;
+      approveBtn.innerHTML = originalHTML;
+    }
+  }
+
+  // Handle Adjust Report Submit
+  async function handleAdjustSubmit(submissionType) {
+    const context = adjustContext.value.trim();
+    const prompt = adjustPrompt.value.trim();
+
+    if (!prompt) {
+      showStatus('⚠ Please enter adjustment instructions', 'error');
+      return;
+    }
+
+    if (!currentGoogleDocId) {
+      showStatus('⚠ Please open a Google Doc', 'error');
+      return;
+    }
+
+    adjustSubmitRecreateBtn.disabled = true;
+    adjustSubmitBtn.disabled = true;
+
+    const clickedButton = submissionType === 'submit_and_recreate' ? adjustSubmitRecreateBtn : adjustSubmitBtn;
+    const originalHTML = clickedButton.innerHTML;
+    clickedButton.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="spin">
+        <path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 19.07L16.24 16.24M19.07 4.93L16.24 7.76M4.93 19.07L7.76 16.24M4.93 4.93L7.76 7.76" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Sending...
+    `;
+
+    try {
+      const payload = {
+        type: 'relative',
+        selectedText: context,
+        prompt: prompt,
+        googleDocId: currentGoogleDocId,
+        submissionType: submissionType,
+        timestamp: new Date().toISOString()
+      };
+
+      const response = await chrome.runtime.sendMessage({
+        action: 'sendFeedback',
+        payload: payload
+      });
+
+      if (response && response.success) {
+        showStatus('✓ Adjustments submitted successfully!', 'success');
+        adjustContext.value = '';
+        adjustPrompt.value = '';
+        localStorage.removeItem('adjustData');
+        setTimeout(() => {
+          showView('mainMenu');
+        }, 1500);
+      } else {
+        throw new Error(response?.error || 'Failed to submit');
+      }
+    } catch (error) {
+      showStatus('✗ Failed to submit adjustments', 'error');
+    } finally {
+      adjustSubmitRecreateBtn.disabled = false;
+      adjustSubmitBtn.disabled = false;
+      clickedButton.innerHTML = originalHTML;
+    }
+  }
+
+  // Handle Rules Submit
+  async function handleRulesSubmit() {
+    const rules = getRules();
+
+    if (rules.length === 0) {
+      showStatus('⚠ Please add at least one rule', 'error');
+      return;
+    }
+
+    rulesSubmitBtn.disabled = true;
+    const originalHTML = rulesSubmitBtn.innerHTML;
+    rulesSubmitBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="spin">
+        <path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 19.07L16.24 16.24M19.07 4.93L16.24 7.76M4.93 19.07L7.76 16.24M4.93 4.93L7.76 7.76" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Sending...
+    `;
+
+    try {
+      const response = await fetch(CONFIG.WEBHOOKS.rules, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rules: rules })
+      });
+
+      if (response.ok) {
+        showStatus('✓ Rules submitted successfully!', 'success');
+        rulesContainer.innerHTML = '';
+        ruleCounter = 0;
+        addRuleInput('', false);
+        localStorage.removeItem('rulesData');
+        setTimeout(() => {
+          showView('mainMenu');
+        }, 1500);
+      } else {
+        throw new Error('Failed to submit rules');
+      }
+    } catch (error) {
+      showStatus('✗ Failed to submit rules', 'error');
+    } finally {
+      rulesSubmitBtn.disabled = false;
+      rulesSubmitBtn.innerHTML = originalHTML;
+    }
+  }
+
+  // Add a rule input field
+  function addRuleInput(value = '', focus = true) {
+    const ruleId = ++ruleCounter;
+    const ruleItem = document.createElement('div');
+    ruleItem.className = 'rule-item';
+    ruleItem.dataset.ruleId = ruleId;
     
-    feedbackData.rating = currentRating;
-    feedbackData.comment = comment;
-  }
-  
-  // Get current page URL
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    feedbackData.pageUrl = tab.url;
-  } catch (error) {
-    console.error('Error getting page URL:', error);
-  }
-  
-  // Show loading state
-  btnSubmit.classList.add('loading');
-  btnSubmit.disabled = true;
-  
-  try {
-    // Send to background script for webhook call
-    const response = await chrome.runtime.sendMessage({
-      action: 'submitFeedback',
-      data: feedbackData
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'rule-input';
+    input.placeholder = `Rule ${getRuleCount() + 1}`;
+    input.value = value;
+    input.dataset.ruleId = ruleId;
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-rule-btn';
+    removeBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    removeBtn.title = 'Remove rule';
+    
+    removeBtn.addEventListener('click', function() {
+      ruleItem.style.animation = 'slideOut 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+      setTimeout(() => {
+        ruleItem.remove();
+        updateRulePlaceholders();
+        saveRulesData();
+      }, 200);
     });
     
-    if (response.success) {
-      showSuccess();
-      setTimeout(() => {
-        resetForm();
-      }, 2000);
-    } else {
-      showError(response.error || 'Failed to submit feedback');
+    input.addEventListener('input', saveRulesData);
+    
+    ruleItem.appendChild(input);
+    ruleItem.appendChild(removeBtn);
+    rulesContainer.appendChild(ruleItem);
+    
+    if (focus) {
+      input.focus();
     }
-  } catch (error) {
-    console.error('Error submitting feedback:', error);
-    showError('Failed to submit feedback. Please try again.');
-  } finally {
-    btnSubmit.classList.remove('loading');
-    btnSubmit.disabled = false;
+    
+    updateRulePlaceholders();
+    saveRulesData();
   }
-}
 
-// Show success message
-function showSuccess() {
-  successMessage.classList.remove('hidden');
-  errorMessage.classList.add('hidden');
-}
+  // Get current rule count
+  function getRuleCount() {
+    return rulesContainer.querySelectorAll('.rule-input').length;
+  }
 
-// Show error message
-function showError(message) {
-  errorText.textContent = message;
-  errorMessage.classList.remove('hidden');
-  successMessage.classList.add('hidden');
+  // Update rule placeholders
+  function updateRulePlaceholders() {
+    const inputs = rulesContainer.querySelectorAll('.rule-input');
+    inputs.forEach((input, index) => {
+      input.placeholder = `Rule ${index + 1}`;
+    });
+  }
+
+  // Get all rules as an array
+  function getRules() {
+    const inputs = rulesContainer.querySelectorAll('.rule-input');
+    const rules = [];
+    inputs.forEach(input => {
+      const value = input.value.trim();
+      if (value) {
+        rules.push(value);
+      }
+    });
+    return rules;
+  }
+
+  // Save adjust data
+  function saveAdjustData() {
+    const data = {
+      context: adjustContext.value,
+      prompt: adjustPrompt.value
+    };
+    localStorage.setItem('adjustData', JSON.stringify(data));
+  }
+
+  // Load adjust data
+  function loadAdjustData() {
+    const saved = localStorage.getItem('adjustData');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.context) adjustContext.value = data.context;
+        if (data.prompt) adjustPrompt.value = data.prompt;
+      } catch (error) {
+        console.error('Error loading adjust data:', error);
+      }
+    }
+  }
+
+  // Save rules data
+  function saveRulesData() {
+    const data = { rules: getRules() };
+    localStorage.setItem('rulesData', JSON.stringify(data));
+  }
+
+  // Load rules data
+  function loadRulesData() {
+    const saved = localStorage.getItem('rulesData');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.rules && Array.isArray(data.rules) && data.rules.length > 0) {
+          data.rules.forEach(rule => {
+            addRuleInput(rule, false);
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Error loading rules data:', error);
+      }
+    }
+    
+    // Add one empty rule if none exist
+    if (getRuleCount() === 0) {
+      addRuleInput('', false);
+    }
+  }
+
+  function extractDocId(url) {
+    const match = url.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
+    return match ? match[1] : null;
+  }
+
+  function showStatus(message, type) {
+    status.textContent = message;
+    status.className = 'status ' + type;
+    status.style.display = 'block';
+    setTimeout(() => {
+      status.style.display = 'none';
+    }, 3000);
+  }
+
+  // Add CSS for spin animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes slideOut {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+    }
+  `;
+  document.head.appendChild(style);
+});
+
+// Global function for view switching
+function showView(viewId) {
+  document.querySelectorAll('.view').forEach(view => {
+    view.classList.remove('active');
+  });
+  document.getElementById(viewId).classList.add('active');
 }

@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "SGA AI Feedback",
+  "name": "SGA AI Assistant",
   "version": "1.0.0",
-  "description": "Give feedback to SGA AI assistant with relative and absolute feedback options",
+  "description": "Make it easy with Malcolm - approve reports, provide feedback, and manage AI rules directly from Google Docs",
+  "homepage_url": "https://www.sgaconsulting.co.uk",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -13,7 +14,8 @@
     "storage"
   ],
   "host_permissions": [
-    "https://docs.google.com/*"
+    "https://docs.google.com/*",
+    "https://*/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
@@ -22,7 +24,7 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "SGA AI Feedback"
+    "default_title": "SGA AI Assistant"
   },
   "content_scripts": [
     {

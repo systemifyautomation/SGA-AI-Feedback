@@ -1,12 +1,15 @@
 // SGA AI Feedback - Background Service Worker
 
-// Default webhook URL - can be configured in extension storage
-const DEFAULT_WEBHOOK_URL = 'https://your-n8n-instance.com/webhook/sga-ai-feedback';
+// Import webhook configuration
+importScripts('../config.js');
+
+// Default webhook URL from config
+const DEFAULT_WEBHOOK_URL = CONFIG.WEBHOOKS.adjust;
 
 // Listen for messages from popup and content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'submitFeedback') {
-    handleSubmitFeedback(request.data)
+  if (request.action === 'submitFeedback' || request.action === 'sendFeedback') {
+    handleSubmitFeedback(request.data || request.payload)
       .then(result => sendResponse(result))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Keep the message channel open for async response
@@ -38,13 +41,17 @@ async function handleSubmitFeedback(data) {
     const storage = await chrome.storage.sync.get(['webhookUrl']);
     const webhookUrl = storage.webhookUrl || DEFAULT_WEBHOOK_URL;
     
+    // Extract Google Doc ID from URL
+    const googleDocId = extractGoogleDocId(data.pageUrl || data.googleDocId);
+    
     // Prepare the payload
     const payload = {
-      feedbackType: data.type,
       selectedText: data.selectedText || '',
-      pageUrl: data.pageUrl || '',
-      timestamp: data.timestamp || new Date().toISOString(),
-      ...formatFeedbackData(data)
+      googleDocId: googleDocId,
+      prompt: data.prompt || '',
+      rules: data.rules || '',
+      type: data.type || 'relative',
+      submissionType: data.submissionType || 'submit'
     };
     
     console.log('Submitting feedback:', payload);
@@ -72,6 +79,20 @@ async function handleSubmitFeedback(data) {
   } catch (error) {
     console.error('Error submitting feedback:', error);
     return { success: false, error: error.message };
+  }
+}
+
+// Extract Google Doc ID from URL
+function extractGoogleDocId(url) {
+  if (!url) return '';
+  
+  try {
+    // Google Docs URL format: https://docs.google.com/document/d/{DOC_ID}/edit...
+    const match = url.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
+    return match ? match[1] : '';
+  } catch (error) {
+    console.error('Error extracting Google Doc ID:', error);
+    return '';
   }
 }
 

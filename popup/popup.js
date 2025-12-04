@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const status = document.getElementById('status');
 
   let ruleCounter = 0;
-  let currentGoogleDocId = null;
+  let currentGoogleDocUrl = null;
 
   // Initialize
   checkGoogleDocsStatus();
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const isGoogleDocs = url.hostname === 'docs.google.com';
       
       if (isGoogleDocs) {
-        currentGoogleDocId = extractDocId(tab.url);
+        currentGoogleDocUrl = tab.url;
         // Enable approve and adjust buttons
         approveBtn.disabled = false;
         adjustBtn.disabled = false;
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Show view with Google Docs check
   function showViewWithCheck(viewId) {
-    if (!currentGoogleDocId) {
+    if (!currentGoogleDocUrl) {
       showStatus('⚠ Please open a Google Doc to use this feature', 'error');
       return;
     }
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Handle Approve Report
   async function handleApprove() {
-    if (!currentGoogleDocId) {
+    if (!currentGoogleDocUrl) {
       showStatus('⚠ Please open a Google Doc to approve the report', 'error');
       return;
     }
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const response = await fetch(CONFIG.WEBHOOKS.approve, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ googleDocId: currentGoogleDocId })
+        body: JSON.stringify({ googleDocUrl: currentGoogleDocUrl })
       });
 
       if (response.ok) {
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    if (!currentGoogleDocId) {
+    if (!currentGoogleDocUrl) {
       showStatus('⚠ Please open a Google Doc', 'error');
       return;
     }
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
         type: 'relative',
         selectedText: context,
         prompt: prompt,
-        googleDocId: currentGoogleDocId,
+        googleDocUrl: currentGoogleDocUrl,
         submissionType: submissionType,
         timestamp: new Date().toISOString()
       };
@@ -361,11 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (getRuleCount() === 0) {
       addRuleInput('', false);
     }
-  }
-
-  function extractDocId(url) {
-    const match = url.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
-    return match ? match[1] : null;
   }
 
   function showStatus(message, type) {

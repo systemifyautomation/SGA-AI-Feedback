@@ -82,7 +82,7 @@ The extension connects to three n8n webhook endpoints (pre-configured):
 **Payload sent:**
 ```json
 {
-  "googleDocId": "Document ID from Google Docs URL",
+  "googleDocUrl": "https://docs.google.com/document/d/{FileId}/edit?usp=sharing",
   "timestamp": "ISO timestamp"
 }
 ```
@@ -94,7 +94,7 @@ The extension connects to three n8n webhook endpoints (pre-configured):
   "type": "relative",
   "selectedText": "Context provided by user",
   "prompt": "Adjustment instructions from user",
-  "googleDocId": "Document ID",
+  "googleDocUrl": "https://docs.google.com/document/d/{FileId}/edit?usp=sharing",
   "submissionType": "submit" | "submit_and_recreate",
   "timestamp": "ISO timestamp"
 }

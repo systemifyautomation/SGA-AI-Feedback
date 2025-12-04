@@ -41,17 +41,14 @@ async function handleSubmitFeedback(data) {
     const storage = await chrome.storage.sync.get(['webhookUrl']);
     const webhookUrl = storage.webhookUrl || DEFAULT_WEBHOOK_URL;
     
-    // Extract Google Doc ID from URL
-    const googleDocId = extractGoogleDocId(data.pageUrl || data.googleDocId);
-    
-    // Prepare the payload
+    // Prepare the payload - preserve all fields from popup
     const payload = {
-      selectedText: data.selectedText || '',
-      googleDocId: googleDocId,
-      prompt: data.prompt || '',
-      rules: data.rules || '',
       type: data.type || 'relative',
-      submissionType: data.submissionType || 'submit'
+      selectedText: data.selectedText || '',
+      prompt: data.prompt || '',
+      googleDocUrl: data.googleDocUrl || '',
+      submissionType: data.submissionType || 'submit',
+      timestamp: data.timestamp || new Date().toISOString()
     };
     
     console.log('Submitting feedback:', payload);
@@ -80,36 +77,6 @@ async function handleSubmitFeedback(data) {
     console.error('Error submitting feedback:', error);
     return { success: false, error: error.message };
   }
-}
-
-// Extract Google Doc ID from URL
-function extractGoogleDocId(url) {
-  if (!url) return '';
-  
-  try {
-    // Google Docs URL format: https://docs.google.com/document/d/{DOC_ID}/edit...
-    const match = url.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
-    return match ? match[1] : '';
-  } catch (error) {
-    console.error('Error extracting Google Doc ID:', error);
-    return '';
-  }
-}
-
-// Format feedback data based on type
-function formatFeedbackData(data) {
-  if (data.type === 'relative') {
-    return {
-      expectedOutput: data.expectedOutput || '',
-      comment: data.comment || ''
-    };
-  } else if (data.type === 'absolute') {
-    return {
-      rating: data.rating || 0,
-      comment: data.comment || ''
-    };
-  }
-  return {};
 }
 
 // Store feedback in local history

@@ -105,6 +105,7 @@ The extension connects to three n8n webhook endpoints (pre-configured):
 ```json
 {
   "rules": ["Rule 1", "Rule 2", "Rule 3", ...],
+  "googleDocUrl": "https://docs.google.com/document/d/{FileId}/edit?usp=sharing",
   "timestamp": "ISO timestamp"
 }
 ```

@@ -113,10 +113,14 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
+      // Get current tab URL at submission time
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const currentUrl = tab.url;
+
       const response = await fetch(CONFIG.WEBHOOKS.approve, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ googleDocUrl: currentGoogleDocUrl })
+        body: JSON.stringify({ googleDocUrl: currentUrl })
       });
 
       if (response.ok) {
@@ -160,11 +164,15 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
+      // Get current tab URL at submission time
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const currentUrl = tab.url;
+
       const payload = {
         type: 'relative',
         selectedText: context,
         prompt: prompt,
-        googleDocUrl: currentGoogleDocUrl,
+        googleDocUrl: currentUrl,
         submissionType: submissionType,
         timestamp: new Date().toISOString()
       };
@@ -213,10 +221,17 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     try {
+      // Get current tab URL at submission time
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const currentUrl = tab.url;
+
       const response = await fetch(CONFIG.WEBHOOKS.rules, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rules: rules })
+        body: JSON.stringify({ 
+          rules: rules,
+          googleDocUrl: currentUrl 
+        })
       });
 
       if (response.ok) {

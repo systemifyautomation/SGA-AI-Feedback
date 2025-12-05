@@ -2,6 +2,14 @@
 
 A premium Chrome extension for SGA Consulting that streamlines AI workflow management directly within Google Docs. Features a beautiful glass morphism interface with three powerful workflows: report approval, feedback submission, and AI rule management.
 
+## 📺 Video Demo
+
+Watch how it works:
+
+[![SGA AI Assistant Demo](https://img.youtube.com/vi/OkAm1QLhwm0/maxresdefault.jpg)](https://www.youtube.com/watch?v=OkAm1QLhwm0)
+
+[**▶️ Watch the full demonstration on YouTube**](https://www.youtube.com/watch?v=OkAm1QLhwm0)
+
 ## 🎯 Features
 
 ### Three Powerful Workflows
@@ -82,7 +90,11 @@ The extension connects to three n8n webhook endpoints (pre-configured):
 **Payload sent:**
 ```json
 {
+<<<<<<< HEAD
   "googleDocId": "Document ID from Google Docs URL",
+=======
+  "googleDocUrl": "https://docs.google.com/document/d/{FileId}/edit?usp=sharing",
+>>>>>>> copilot/add-feedback-extension-ui
   "timestamp": "ISO timestamp"
 }
 ```
@@ -94,7 +106,11 @@ The extension connects to three n8n webhook endpoints (pre-configured):
   "type": "relative",
   "selectedText": "Context provided by user",
   "prompt": "Adjustment instructions from user",
+<<<<<<< HEAD
   "googleDocId": "Document ID",
+=======
+  "googleDocUrl": "https://docs.google.com/document/d/{FileId}/edit?usp=sharing",
+>>>>>>> copilot/add-feedback-extension-ui
   "submissionType": "submit" | "submit_and_recreate",
   "timestamp": "ISO timestamp"
 }
@@ -105,6 +121,10 @@ The extension connects to three n8n webhook endpoints (pre-configured):
 ```json
 {
   "rules": ["Rule 1", "Rule 2", "Rule 3", ...],
+<<<<<<< HEAD
+=======
+  "googleDocUrl": "https://docs.google.com/document/d/{FileId}/edit?usp=sharing",
+>>>>>>> copilot/add-feedback-extension-ui
   "timestamp": "ISO timestamp"
 }
 ```

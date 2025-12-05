@@ -2,6 +2,14 @@
 
 A premium Chrome extension for SGA Consulting that streamlines AI workflow management directly within Google Docs. Features a beautiful glass morphism interface with three powerful workflows: report approval, feedback submission, and AI rule management.
 
+## 📺 Video Demo
+
+Watch how it works:
+
+[![SGA AI Assistant Demo](https://img.youtube.com/vi/OkAm1QLhwm0/maxresdefault.jpg)](https://www.youtube.com/watch?v=OkAm1QLhwm0)
+
+[**▶️ Watch the full demonstration on YouTube**](https://www.youtube.com/watch?v=OkAm1QLhwm0)
+
 ## 🎯 Features
 
 ### Three Powerful Workflows

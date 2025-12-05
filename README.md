@@ -40,14 +40,31 @@ Watch how it works:
 
 ## 📦 Installation
 
-### For End Users (SGA Clients)
+### Quick Install (Recommended)
 
-1. Install directly from the Chrome Web Store link provided by SGA Consulting
-2. Click **"Add to Chrome"**
-3. The SGA AI Assistant icon will appear in your browser toolbar
-4. Open any Google Doc and start using the extension
+**Download the extension package:**
+
+1. **[📥 Download SGA-AI-Assistant.zip](https://drive.google.com/file/d/1fIKFkDMLywowxBoR7_A5UYln1HdHiny4/view?usp=sharing)** from Google Drive
+2. Click the download button (↓) in the top right corner of the Drive preview
+3. Save the file to your computer
+
+**Install in Chrome:**
+
+1. Open Chrome and navigate to `chrome://extensions/`
+2. Enable **"Developer mode"** toggle in the top right corner
+3. Click **"Load unpacked"** button
+4. Browse to the location where you extracted the ZIP file
+5. Select the extracted folder (named `SGA-AI-Assistant` or similar)
+6. The SGA AI Assistant icon will appear in your browser toolbar
+7. **Done!** Open any Google Doc and click the extension icon to start using it
 
 **No configuration needed** - webhooks are pre-configured for your organization.
+
+### For Chrome Web Store (Coming Soon)
+
+1. Visit the Chrome Web Store link (will be provided by SGA Consulting)
+2. Click **"Add to Chrome"**
+3. The extension will install automatically
 
 ### For Development
 

@@ -56,7 +56,14 @@ Watch how it works:
 4. Browse to the location where you extracted the ZIP file
 5. Select the extracted folder (named `SGA-AI-Assistant` or similar)
 6. The SGA AI Assistant icon will appear in your browser toolbar
-7. **Done!** Open any Google Doc and click the extension icon to start using it
+
+**Pin the extension for easy access:**
+
+7. Click the **puzzle piece icon** (Extensions) in the top right of Chrome
+8. Find "SGA AI Assistant" in the list
+9. Click the **pin icon** (📌) next to it
+10. The extension icon will now stay visible in your toolbar
+11. **Done!** Open any Google Doc and click the extension icon to start using it
 
 **No configuration needed** - webhooks are pre-configured for your organization.
 

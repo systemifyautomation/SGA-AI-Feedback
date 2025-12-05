@@ -6,9 +6,9 @@ A premium Chrome extension for SGA Consulting that streamlines AI workflow manag
 
 Watch how it works:
 
-[![SGA AI Assistant Demo](https://img.youtube.com/vi/OkAm1QLhwm0/maxresdefault.jpg)](https://www.youtube.com/watch?v=OkAm1QLhwm0)
+[![Malcolm 2.0 Demo](assets/demo-thumbnail.png)](https://drive.google.com/file/d/1FVVwdtEs5CGnpMyqlIsubxD0jEmIqTsF/view?usp=sharing)
 
-[**▶️ Watch the full demonstration on YouTube**](https://www.youtube.com/watch?v=OkAm1QLhwm0)
+[**▶️ Watch the full demonstration**](https://drive.google.com/file/d/1FVVwdtEs5CGnpMyqlIsubxD0jEmIqTsF/view?usp=sharing)
 
 ## 🎯 Features
 
